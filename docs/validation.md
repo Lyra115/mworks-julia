@@ -1,31 +1,36 @@
-# Validation Results
+# Validation Results / 验证结果
 
-Verified locally on 19 October 2026 using the MWORKS-provided Julia 1.10.10 runtime on Windows.
+截至 2026-10-19，本地使用 MWORKS.Syslab Julia 1.10.10 完成验证。
 
-## Automated checks
+Validation was completed locally on 2026-10-19 with MWORKS.Syslab Julia 1.10.10.
 
-All **39 assertions passed** across six test sets: column normalization (5), neighbor updates (7), character mentions (12), word analysis (8), game input validation (3), and numeric representations (4).
+## Automated tests / 自动化测试
 
-## Script runs
+`julia test/runtests.jl` runs eight test sets with **54 passing assertions**. Coverage includes matrix boundaries and mutation, character aliases, word processing, input validation, numeric representations, card generation/shuffling/dealing, and rock-paper-scissors outcomes and aggregate counts.
 
-- Numeric explorer: completed with integers 10 and 3, floats 5.5 and 2.2, complex values 1+2im and 3-1im, and rationals 1//2 and 1//3.
-- Both matrix scripts: completed their built-in demonstrations.
-- English analyzer: completed with the built-in sample text.
-- Guessing game: completed a scripted session including invalid difficulty input, one round, and exit. Random secret values are not fixed, so exact guess outcomes vary.
-- Character analyzer: completed on both full supplied corpus files.
-- Both corpus byte lengths and SHA-256 hashes match the supplied originals.
+运行 `julia test/runtests.jl` 共执行八组测试、**54 项断言全部通过**。覆盖矩阵边界与修改行为、人物别名、词频处理、输入校验、数值表示、扑克牌生成/洗牌/发牌，以及石头剪刀布胜负和统计汇总。
 
-## Corpus results
+## Script checks / 脚本运行
 
-| Character | Gutenberg corpus | Alternate corpus |
+矩阵示例、文本分析、数值运算、猜数游戏及新增随机模拟均在本地运行。游戏秘密值、牌序和模拟统计未固定，因此实际交互输出可能与样例不同。扑克牌校验验证牌堆和发牌集合；石头剪刀布测试使用固定种子并核对总局数。
+
+Matrix examples, text analysis, numeric operations, the guessing game, and the new random simulations were run locally. The game secret, shuffled order, and simulation totals are not fixed, so interactive output can differ from examples. Card-deal checks validate deck and deal sets; rock-paper-scissors tests use a fixed seed and verify the total number of rounds.
+
+## Corpus results / 语料结果
+
+| Character / 人物 | Gutenberg corpus | Alternate corpus |
 | --- | ---: | ---: |
 | 唐僧 | 2399 | 2545 |
 | 孙悟空 | 4759 | 4974 |
 | 猪八戒 | 2173 | 2296 |
 | 沙僧 | 892 | 938 |
 
-These totals use non-overlapping configured aliases, include the entire supplied text, and are not semantic counts of character appearances. Raw alias details remain available in the program output.
+以上为全文件范围内基于配置别名的非重叠关键词总数，不代表语义层面的人物出现次数。原始别名匹配明细可由程序查看。
 
-## Limits of verification
+These are non-overlapping keyword totals for configured aliases across each complete file, not semantic counts of character appearances. Raw per-alias matches are available from the program.
 
-The checks cover ordinary finite numeric inputs and the documented matrix boundaries. They do not establish behavior for every custom array implementation, malformed interactive input sequence, or alternative Julia version. The text difficulty thresholds are heuristic and have not been calibrated against a labeled readability dataset.
+## Limits / 验证范围
+
+验证覆盖已记录的有限数值输入、矩阵边界及指定交互路径，但不证明所有自定义数组类型、任意输入序列或其他 Julia 版本都能正常工作。文本难度阈值尚未通过标注语料校准。
+
+Checks cover the documented finite numeric inputs, matrix boundaries, and selected interaction paths. They do not prove behavior for every custom array type, arbitrary input sequence, or other Julia version. Text difficulty thresholds have not been calibrated against labeled readability data.

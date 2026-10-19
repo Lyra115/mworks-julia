@@ -16,6 +16,12 @@ end
 module Numeric
 include(joinpath(@__DIR__, "..", "numeric-types", "numeric_operations.jl"))
 end
+module Poker
+include(joinpath(@__DIR__, "..", "card-dealing-simulator", "poker_dealing_simulator.jl"))
+end
+module RockPaperScissors
+include(joinpath(@__DIR__, "..", "rock-paper-scissors", "rock_paper_scissors_simulation.jl"))
+end
 
 @testset "Column normalization" begin
     a = [1.0 9.0; 3.0 9.0; 5.0 9.0]
@@ -83,4 +89,32 @@ end
     @test 10 % -3 == 1
     @test 1//2 + 1//3 == 5//6
     @test (1+2im) * (3-1im) == 5+5im
+end
+
+@testset "Card dealing simulator" begin
+    deck = Poker.generate_deck()
+    @test length(deck) == 54
+    @test length(Set(deck)) == 54
+    shuffled = copy(deck)
+    Poker.shuffle_deck!(shuffled; rng=Poker.Random.MersenneTwister(42))
+    @test Set(shuffled) == Set(deck)
+    @test shuffled != deck
+
+    p1, p2, p3, bottom = Poker.deal_cards(shuffled)
+    @test (length(p1), length(p2), length(p3), length(bottom)) == (17, 17, 17, 3)
+    checks = Poker.verify_deal(shuffled, p1, p2, p3, bottom)
+    @test checks.deck_is_unique
+    @test checks.deal_has_no_duplicates
+    @test checks.deal_matches_deck
+    @test_throws ArgumentError Poker.deal_cards(deck[1:53])
+end
+
+@testset "Rock-paper-scissors simulation" begin
+    @test RockPaperScissors.round_result(:rock, :scissors) == :player
+    @test RockPaperScissors.round_result(:paper, :scissors) == :computer
+    @test RockPaperScissors.round_result(:paper, :paper) == :draw
+    stats = RockPaperScissors.simulate_games(1_000; rng=RockPaperScissors.Random.MersenneTwister(7))
+    @test stats.player_wins + stats.computer_wins + stats.draws == 1_000
+    @test_throws ArgumentError RockPaperScissors.simulate_games(-1)
+    @test_throws ArgumentError RockPaperScissors.round_result(:lizard, :rock)
 end
