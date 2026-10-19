@@ -1,0 +1,5 @@
+*.cov
+*.jl.cov
+.DS_Store
+Thumbs.db
+.vscode/

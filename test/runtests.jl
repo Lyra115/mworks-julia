@@ -1,0 +1,86 @@
+using Test
+
+module MatrixTools
+include(joinpath(@__DIR__, "..", "matrix-processing", "column_normalization.jl"))
+include(joinpath(@__DIR__, "..", "matrix-processing", "neighbor_average_update.jl"))
+end
+module Characters
+include(joinpath(@__DIR__, "..", "text-analysis", "character_mentions.jl"))
+end
+module Words
+include(joinpath(@__DIR__, "..", "text-analysis", "word_frequency.jl"))
+end
+module Game
+include(joinpath(@__DIR__, "..", "number-guessing-game", "number_guessing_game.jl"))
+end
+module Numeric
+include(joinpath(@__DIR__, "..", "numeric-types", "numeric_operations.jl"))
+end
+
+@testset "Column normalization" begin
+    a = [1.0 9.0; 3.0 9.0; 5.0 9.0]
+    @test MatrixTools.normalize_matrix!(a) === a
+    @test a == [0.0 0.0; 0.5 0.0; 1.0 0.0]
+    @test size(MatrixTools.normalize_matrix!(zeros(0, 2))) == (0, 2)
+    @test MatrixTools.normalize_matrix!(fill(3.0, 1, 2)) == zeros(1, 2)
+    @test_throws MethodError MatrixTools.normalize_matrix!([1 2; 3 4])
+end
+
+@testset "Neighbor updates" begin
+    a = [1 2; 3 4]
+    before = copy(a)
+    @test MatrixTools.neighbor_average_update(a) == [3.5 4.5; 5.5 6.5]
+    @test a == before
+    @test MatrixTools.neighbor_average_update(reshape([7], 1, 1)) == fill(7.0, 1, 1)
+    @test MatrixTools.neighbor_average_update([1 2 3]) == [3.0 4.0 5.0]
+    @test MatrixTools.neighbor_average_update(reshape([1, 2, 3], 3, 1)) == reshape([3.0, 4.0, 5.0], 3, 1)
+    @test size(MatrixTools.neighbor_average_update(zeros(0, 3))) == (0, 3)
+    x = reshape(1:9, 3, 3)
+    @test MatrixTools.neighbor_average_update(x)[2, 2] == 10.0
+end
+
+@testset "Character mentions" begin
+    total, detail = Characters.count_character("孙行者和行者", ["孙行者", "行者"])
+    @test total == 2
+    @test sum(values(detail)) == 3
+    @test first(Characters.count_character("孫悟空與孙悟空", ["孫悟空", "孙悟空"])) == 2
+    @test first(Characters.count_character("无匹配", ["唐僧"])) == 0
+    @test first(Characters.count_character("文本", String[])) == 0
+    @test_throws ArgumentError Characters.count_character("文本", [".*"])
+    for name in ("journey_to_the_west_gutenberg.txt", "journey_to_the_west_alternate.txt")
+        text = Characters.load_text(joinpath(@__DIR__, "..", "data", name))
+        @test isvalid(text)
+        @test length(text) > 100000
+        @test first(Characters.count_character(text, ["三藏"])) > 0
+    end
+end
+
+@testset "Word analysis" begin
+    @test Words.preprocess("High-level, DON'T! 123") == ["high", "level", "dont"]
+    @test Words.count_words(["a", "b", "a"]) == Dict("a" => 2, "b" => 1)
+    @test Words.difficulty_level(5.5, 0.0) == "困难"
+    @test Words.difficulty_level(1.0, 0.30) == "困难"
+    @test Words.difficulty_level(4.5, 0.0) == "中等"
+    @test Words.difficulty_level(1.0, 0.15) == "中等"
+    @test Words.difficulty_level(2.0, 0.0) == "简单"
+    @test isempty(Words.preprocess("123 !!!"))
+end
+
+@testset "Game input validation" begin
+    mktemp() do path, io
+        write(io, "abc\n0\n51\n25\n"); seekstart(io)
+        answer = redirect_stdin(io) do
+            Game.read_int("", 1, 50)
+        end
+        @test answer == 25
+    end
+    @test length(Game.LEVELS) == 3
+    @test Game.MAX_TRIES == 7
+end
+
+@testset "Numeric representations" begin
+    @test -10 % 3 == -1
+    @test 10 % -3 == 1
+    @test 1//2 + 1//3 == 5//6
+    @test (1+2im) * (3-1im) == 5+5im
+end
