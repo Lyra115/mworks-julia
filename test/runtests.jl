@@ -1,5 +1,21 @@
 using Test
 
+module PrimeTool
+include(joinpath(@__DIR__, "..", "prime-number-tool", "prime_number_tool.jl"))
+end
+module Narcissistic
+include(joinpath(@__DIR__, "..", "narcissistic-numbers", "narcissistic_numbers.jl"))
+end
+module SelectionSort
+include(joinpath(@__DIR__, "..", "descending-selection-sort", "selection_sort_descending.jl"))
+end
+module ExpressionCalculator
+include(joinpath(@__DIR__, "..", "expression-calculator", "expression_calculator.jl"))
+end
+module LineFit
+include(joinpath(@__DIR__, "..", "minimum-distance-line-fit", "minimum_distance_line.jl"))
+end
+
 module MatrixTools
 include(joinpath(@__DIR__, "..", "matrix-processing", "column_normalization.jl"))
 include(joinpath(@__DIR__, "..", "matrix-processing", "neighbor_average_update.jl"))
@@ -117,4 +133,70 @@ end
     @test stats.player_wins + stats.computer_wins + stats.draws == 1_000
     @test_throws ArgumentError RockPaperScissors.simulate_games(-1)
     @test_throws ArgumentError RockPaperScissors.round_result(:lizard, :rock)
+end
+
+@testset "Prime number tool" begin
+    @test PrimeTool.is_prime(2)
+    @test PrimeTool.is_prime(97)
+    @test PrimeTool.is_prime(1_000_000_007)
+    @test !PrimeTool.is_prime(-7)
+    @test !PrimeTool.is_prime(100)
+    @test PrimeTool.primes_up_to(10) == [2, 3, 5, 7]
+    @test isempty(PrimeTool.primes_up_to(1))
+end
+
+@testset "Narcissistic numbers" begin
+    @test Narcissistic.is_narcissistic_number(153)
+    @test !Narcissistic.is_narcissistic_number(154)
+    @test !Narcissistic.is_narcissistic_number(-153)
+    @test Narcissistic.find_narcissistic_numbers() == [153, 370, 371, 407]
+    @test Narcissistic.narcissistic_equation(153) == "153 = 1^3 + 5^3 + 3^3"
+end
+
+@testset "Descending selection sort" begin
+    values = [64, 25, 12, 22, 11, 90, 3, 47]
+    @test SelectionSort.selection_sort_descending(values) == [90, 64, 47, 25, 22, 12, 11, 3]
+    @test values == [64, 25, 12, 22, 11, 90, 3, 47]
+    @test SelectionSort.selection_sort_descending(1:6) == [6, 5, 4, 3, 2, 1]
+    @test SelectionSort.selection_sort_descending(["banana", "apple", "cherry"]) == ["cherry", "banana", "apple"]
+    @test isempty(SelectionSort.selection_sort_descending(Int[]))
+end
+
+@testset "Expression calculator" begin
+    @test ExpressionCalculator.calculate_expression("112 + 3") == "115"
+    @test ExpressionCalculator.calculate_expression("7 / 2") == "3.5"
+    @test ExpressionCalculator.calculate_expression("17 % 5") == "2"
+    @test ExpressionCalculator.calculate_expression("2 ^ 10") == "1024"
+    @test startswith(ExpressionCalculator.calculate_expression("5 / 0"), "Error:")
+    @test startswith(ExpressionCalculator.calculate_expression("abc"), "Error:")
+    @test startswith(ExpressionCalculator.calculate_expression("1e309 + 1"), "Error:")
+end
+
+@testset "Minimum-distance line fit" begin
+    points = [(Float64(i), 2.0 * i + 1) for i in 0:5]
+    fit = LineFit.best_fit_line(points)
+    @test fit.total_distance ≈ 0 atol=1e-9
+    @test fit.slope ≈ 2.0 atol=1e-9
+    @test fit.intercept ≈ 1.0 atol=1e-9
+
+    vertical = [(3.0, y) for y in (-2.0, 0.0, 5.0, 9.0)]
+    vertical_fit = LineFit.best_fit_line(vertical)
+    @test vertical_fit.total_distance ≈ 0 atol=1e-9
+    @test vertical_fit.slope === nothing
+    @test LineFit.equation_string(vertical_fit) == "x = 3.0000"
+
+    outlier_points = [(Float64(i), 2.0 * i + 1) for i in 0:9]
+    push!(outlier_points, (10.0, 40.0))
+    robust_fit = LineFit.best_fit_line(outlier_points)
+    slope, intercept = LineFit.least_squares_line(outlier_points)
+    ls_theta = atan(1.0, -slope)
+    ls_offset = intercept / sqrt(1 + slope^2)
+    @test robust_fit.total_distance <= LineFit.total_distance(outlier_points, ls_theta, ls_offset) + 1e-9
+
+    sampled_best = minimum(begin
+        offset = LineFit.projection_median(outlier_points, theta)
+        LineFit.total_distance(outlier_points, theta, offset)
+    end for theta in range(0, π; length=2_001))
+    @test robust_fit.total_distance <= sampled_best + 1e-6
+    @test_throws ArgumentError LineFit.best_fit_line([])
 end

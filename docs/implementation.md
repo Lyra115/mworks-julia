@@ -39,3 +39,9 @@ The card simulator represents each card as an immutable tuple, stores decks and 
 文件名描述功能而非编号。交互入口通过 `abspath(PROGRAM_FILE) == @__FILE__` 保护，因此包含脚本用于测试不会自动启动输入循环。
 
 Filenames describe behavior rather than sequence numbers. Interactive entry points use an `abspath(PROGRAM_FILE) == @__FILE__` guard, so including a script for tests does not start an input loop.
+
+## Function-focused examples / 函数应用示例
+
+素数工具使用试除法并将因子搜索限制到整数平方根；水仙花数程序把数位分解与立方和判定拆成可复用函数；降序选择排序返回新数组以保留输入。表达式计算器把正则解析与运算符函数字典结合。最小距离直线拟合枚举点投影顺序变化的方向区间，在每段内比较解析驻点与边界，从而覆盖全局最优方向，也支持竖直线。
+
+The prime tool bounds trial division by the integer square root. The narcissistic-number example separates digit decomposition from the cube-sum check. Selection sort returns a new array and preserves its input. The expression calculator combines regex parsing with an operator-to-function dictionary. The minimum-distance line fit partitions orientations where point-projection order changes, then compares analytical stationary points and interval boundaries to cover the global optimum, including vertical lines.
